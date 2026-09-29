@@ -75,12 +75,12 @@ jobs:
           git config user.email "vpn-status-bot@users.noreply.github.com"
           git fetch origin gh-pages:gh-pages
           git checkout gh-pages
-          git checkout main -- status.json index.html
-          git add status.json index.html
+          git checkout main -- status.json index.html family.html
+          git add status.json index.html family.html
           if git diff --staged --quiet; then
             echo "gh-pages: no change"
           else
-            git commit -m "chore: pages status $(date -u +%Y-%m-%dT%H:%MZ)"
+            git commit -m "chore: pages $(date -u +%Y-%m-%dT%H:%MZ)"
             git push origin gh-pages
           fi
           git checkout main
