@@ -1,7 +1,9 @@
 # Отправить клиентам сейчас
 
 Скопируй три сообщения по очереди (Telegram / куда обычно пишешь).
-После отправки DNS и семьи — закрой issue #1 (SMTP можно позже: ntfy уже шлёт пуши).
+Файл: https://github.com/Hertuno/vpn-status-live/blob/main/SEND.md
+
+После DNS + семьи у клиентов — закрой issue #1.
 
 ---
 
@@ -53,9 +55,10 @@ https://ntfy.sh/vpn-hertuno-alert-7f3a9c2e
 
 ---
 
-## По желанию после рассылки
+## По желанию
 
 | Что | Зачем |
 |---|---|
-| Secrets SMTP_* в репо | письма при падении узла (см. EMAIL.md) |
-| `install-adguard.sh` на каждом VPS | DNS-фильтр на своём сервере вместо публичного AdGuard |
+| Secrets `NTFY_TOKEN` + `NTFY_EMAIL` (см. EMAIL.md) | письмо при падении без своего SMTP |
+| Secrets SMTP_* | массовая почта со своего ящика |
+| `install-adguard.sh` на каждом VPS | DNS-фильтр на своём сервере |

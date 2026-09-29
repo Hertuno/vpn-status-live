@@ -8,15 +8,20 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - name: ntfy test
+      - name: ntfy test (+ email if secrets)
         env:
           NTFY_TOPIC: vpn-hertuno-alert-7f3a9c2e
+          NTFY_TOKEN: ${{ secrets.NTFY_TOKEN }}
+          NTFY_EMAIL: ${{ secrets.NTFY_EMAIL }}
         run: |
-          curl -fsS -H "Title: VPN тест оповещений" -H "Tags: bell" \
-            -d "Тест канала без Telegram. Статус: https://hertuno.github.io/vpn-status-live/ Семейный: https://hertuno.github.io/vpn-status-live/family.html" \
+          HDR=(-H "Title: VPN тест оповещений" -H "Tags: bell")
+          if [ -n "$NTFY_TOKEN" ]; then HDR+=(-H "Authorization: Bearer ${NTFY_TOKEN}"); fi
+          if [ -n "$NTFY_EMAIL" ]; then HDR+=(-H "Email: ${NTFY_EMAIL}"); fi
+          curl -fsS "${HDR[@]}" \
+            -d "Тест канала без Telegram. Статус: https://hertuno.github.io/vpn-status-live/ DNS: https://hertuno.github.io/vpn-status-live/dns.html Семья: https://hertuno.github.io/vpn-status-live/family.html" \
             "https://ntfy.sh/${NTFY_TOPIC}"
-          echo "ntfy ok"
-      - name: email test (if secrets set)
+          echo "ntfy ok (email via ntfy if NTFY_TOKEN+NTFY_EMAIL set)"
+      - name: SMTP email test (if secrets set)
         continue-on-error: true
         env:
           SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
@@ -27,7 +32,7 @@ jobs:
           MAIL_TO: ${{ secrets.MAIL_TO }}
         run: |
           if [ -z "$SMTP_SERVER" ] || [ -z "$MAIL_TO" ]; then
-            echo "SMTP secrets not set — email test skipped"
+            echo "SMTP secrets not set — SMTP test skipped"
             exit 0
           fi
           python3 - <<'PY'

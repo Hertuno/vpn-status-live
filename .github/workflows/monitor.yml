@@ -1,5 +1,5 @@
 name: Monitor VPN nodes
-# refresh-trigger: 2026-09-29T16:10Z
+# refresh-trigger: 2026-09-29T16:15Z
 on:
   schedule:
     - cron: "*/5 * * * *"
@@ -86,24 +86,32 @@ jobs:
             git push origin gh-pages
           fi
           git checkout main
-      - name: Notify ntfy
+      - name: Notify ntfy (+ email via ntfy)
         continue-on-error: true
         env:
           NTFY_TOPIC: vpn-hertuno-alert-7f3a9c2e
+          NTFY_TOKEN: ${{ secrets.NTFY_TOKEN }}
+          NTFY_EMAIL: ${{ secrets.NTFY_EMAIL }}
         run: |
           NEW_DOWN=$(cat notify-down.txt || true)
           NEW_UP=$(cat notify-up.txt || true)
+          AUTH=()
+          if [ -n "$NTFY_TOKEN" ]; then AUTH=(-H "Authorization: Bearer ${NTFY_TOKEN}"); fi
+          EMAIL_H=()
+          if [ -n "$NTFY_EMAIL" ]; then EMAIL_H=(-H "Email: ${NTFY_EMAIL}"); fi
           if [ -n "$NEW_DOWN" ]; then
             curl -fsS -H "Title: VPN недоступен" -H "Priority: high" -H "Tags: warning" \
+              "${AUTH[@]}" "${EMAIL_H[@]}" \
               -d "Узлы: ${NEW_DOWN}. Запасной ключ. https://hertuno.github.io/vpn-status-live/" \
               "https://ntfy.sh/${NTFY_TOPIC}"
           fi
           if [ -n "$NEW_UP" ]; then
             curl -fsS -H "Title: VPN восстановлен" -H "Tags: white_check_mark" \
+              "${AUTH[@]}" "${EMAIL_H[@]}" \
               -d "Снова в работе: ${NEW_UP}. https://hertuno.github.io/vpn-status-live/" \
               "https://ntfy.sh/${NTFY_TOPIC}"
           fi
-      - name: Email on change
+      - name: Email on change (SMTP)
         continue-on-error: true
         env:
           SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
