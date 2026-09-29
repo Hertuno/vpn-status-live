@@ -1,5 +1,5 @@
 name: Monitor VPN nodes
-# refresh-trigger: 2026-09-29T16:40Z
+# refresh-trigger: 2026-09-29T16:42Z
 on:
   schedule:
     - cron: "*/5 * * * *"
@@ -127,14 +127,30 @@ jobs:
             SUB="[VPN] восстановлен: ${NEW_UP}"
             BODY="Снова в работе: ${NEW_UP}. https://hertuno.github.io/vpn-status-live/"
           fi
-          curl -fsS -X POST "https://formsubmit.co/ajax/${TO}" \
-            -H "Content-Type: application/json" \
-            -H "Accept: application/json" \
-            -d "$(python3 -c "import json,os; print(json.dumps({'name':'VPN monitor','_subject':os.environ['SUB'],'_template':'table','_captcha':'false','message':os.environ['BODY']}))" )"
-          echo "formsubmit ok -> ${TO}"
+          python3 <<PY
+          import json, os, urllib.request
+          to = os.environ["TO"]
+          payload = {
+            "name": "VPN monitor",
+            "_subject": os.environ["SUB"],
+            "_template": "table",
+            "_captcha": "false",
+            "message": os.environ["BODY"],
+          }
+          req = urllib.request.Request(
+            f"https://formsubmit.co/ajax/{to}",
+            data=json.dumps(payload).encode(),
+            headers={"Content-Type": "application/json", "Accept": "application/json"},
+            method="POST",
+          )
+          with urllib.request.urlopen(req, timeout=30) as r:
+            print(r.read().decode())
+          print("formsubmit ok ->", to)
+          PY
         env:
           FORMSUBMIT_EMAIL: ${{ secrets.FORMSUBMIT_EMAIL }}
-          # SUB/BODY set in run via export — fix below
+          TO: ${{ secrets.FORMSUBMIT_EMAIL }}
+          # TO/SUB/BODY overridden in shell before python — clean version:
       - name: Email on change (SMTP)
         continue-on-error: true
         env:
