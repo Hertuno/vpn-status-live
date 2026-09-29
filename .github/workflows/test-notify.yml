@@ -14,13 +14,13 @@ jobs:
           NTFY_TOKEN: ${{ secrets.NTFY_TOKEN }}
           NTFY_EMAIL: ${{ secrets.NTFY_EMAIL }}
         run: |
-          HDR=(-H "Title: VPN тест оповещений" -H "Tags: bell")
+          HDR=(-H "Title: VPN: пора SEND.md" -H "Tags: bell" -H "Click: https://github.com/Hertuno/vpn-status-live/blob/main/SEND.md")
           if [ -n "$NTFY_TOKEN" ]; then HDR+=(-H "Authorization: Bearer ${NTFY_TOKEN}"); fi
           if [ -n "$NTFY_EMAIL" ]; then HDR+=(-H "Email: ${NTFY_EMAIL}"); fi
           curl -fsS "${HDR[@]}" \
-            -d "Тест канала без Telegram. Статус: https://hertuno.github.io/vpn-status-live/ DNS: https://hertuno.github.io/vpn-status-live/dns.html Семья: https://hertuno.github.io/vpn-status-live/family.html" \
+            -d "Скопируй 3 блока клиентам: https://github.com/Hertuno/vpn-status-live/blob/main/SEND.md — DNS, статус/пуши, семья. Почта: EMAIL.md (NTFY_TOKEN+NTFY_EMAIL)." \
             "https://ntfy.sh/${NTFY_TOPIC}"
-          echo "ntfy ok (email via ntfy if NTFY_TOKEN+NTFY_EMAIL set)"
+          echo "ntfy ok"
       - name: SMTP email test (if secrets set)
         continue-on-error: true
         env:
