@@ -9,15 +9,22 @@ body{font-family:system-ui,sans-serif;max-width:720px;margin:2rem auto;padding:0
 h1{font-size:1.35rem}h2{font-size:1.05rem;margin:0 0 .5rem}
 .card{background:#fff;border:1px solid #d0d7de;border-radius:8px;padding:1rem;margin:1rem 0}
 pre{white-space:pre-wrap;background:#eaeef2;padding:.75rem;border-radius:6px;font-size:.85rem;margin:0 0 .75rem}
-button{background:#1f2328;color:#fff;border:0;border-radius:6px;padding:.55rem 1rem;cursor:pointer;font-size:.95rem}
-button:hover{opacity:.9}
+button,a.btn{background:#1f2328;color:#fff;border:0;border-radius:6px;padding:.55rem 1rem;cursor:pointer;font-size:.95rem;text-decoration:none;display:inline-block}
+button:hover,a.btn:hover{opacity:.9}
 button.done{background:#1a7f37}
 .meta{color:#656d76;font-size:.9rem}a{color:#0969da}
+.warn{background:#fff8c5;border:1px solid #d4a72c;border-radius:8px;padding:1rem;margin:1rem 0}
 </style>
 </head>
 <body>
 <h1>Рассылка клиентам</h1>
 <p class="meta">Три кнопки → вставить в Telegram. После отправки закрой <a href="https://github.com/Hertuno/vpn-status-live/issues/1">issue #1</a>.</p>
+
+<div class="warn">
+<strong>Почта:</strong> письма FormSubmit из Actions не пришли — это бывает часто.<br/>
+Открой <a href="activate-mail.html">activate-mail.html</a> → нажми кнопку → проверь Яндекс (и Спам) → Activate.<br/>
+Или настрой SMTP Яндекс за 2 минуты: <a href="https://github.com/Hertuno/vpn-status-live/blob/main/EMAIL.md">EMAIL.md</a> § B.
+</div>
 
 <div class="card">
 <h2>1) DNS</h2>
@@ -61,14 +68,7 @@ https://ntfy.sh/vpn-hertuno-alert-7f3a9c2e
 <button type="button" data-target="m3">Скопировать семью</button>
 </div>
 
-<div class="card">
-<h2>Почта</h2>
-<p class="meta">Уже настроено на <code>hertuno@yandex.ru</code> через FormSubmit (без Secrets).<br/>
-Один раз: в Яндекс-почте письмо FormSubmit → <strong>Activate</strong>.<br/>
-Проверка: Actions → Test notify channels → Run.</p>
-</div>
-
-<p class="meta"><a href="./">← Статус</a></p>
+<p class="meta"><a href="./">← Статус</a> · <a class="btn" href="activate-mail.html">Включить почту</a></p>
 <script>
 document.querySelectorAll('button[data-target]').forEach(btn=>{
   btn.addEventListener('click', async ()=>{

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Включить почту VPN</title>
+<style>
+body{font-family:system-ui,sans-serif;max-width:560px;margin:2rem auto;padding:0 1rem;background:#f6f8fa;color:#1f2328;line-height:1.5}
+.card{background:#fff;border:1px solid #d0d7de;border-radius:8px;padding:1.25rem}
+button{background:#1f2328;color:#fff;border:0;border-radius:6px;padding:.7rem 1.2rem;font-size:1rem;cursor:pointer;width:100%}
+.meta{color:#656d76;font-size:.9rem}a{color:#0969da}
+ol{padding-left:1.2rem}
+</style>
+</head>
+<body>
+<h1>Включить почту при сбоях</h1>
+<div class="card">
+<p>Письма из GitHub Actions до ящика часто не доходят. Нажми кнопку <strong>из браузера</strong> — FormSubmit пришлёт Activate на <code>hertuno@yandex.ru</code>.</p>
+<form action="https://formsubmit.co/hertuno@yandex.ru" method="POST">
+  <input type="hidden" name="_subject" value="[VPN] активация почты FormSubmit">
+  <input type="hidden" name="_template" value="table">
+  <input type="hidden" name="_captcha" value="false">
+  <input type="text" name="_honey" style="display:none">
+  <input type="hidden" name="message" value="Активация формы для оповещений VPN. После Activate письма при падении узлов пойдут на этот ящик.">
+  <input type="hidden" name="_next" value="https://hertuno.github.io/vpn-status-live/operator.html">
+  <button type="submit">Отправить Activate на Яндекс-почту</button>
+</form>
+<ol class="meta">
+<li>Нажми кнопку выше</li>
+<li>Открой Яндекс → Входящие и <strong>Спам</strong></li>
+<li>Письмо FormSubmit → ссылка Activate</li>
+<li>Готово: монитор сможет слать письма при DOWN/UP</li>
+</ol>
+</div>
+<p class="meta"><a href="operator.html">← Оператор</a> · <a href="./">Статус</a></p>
+</body>
+</html>
