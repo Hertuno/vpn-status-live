@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>DNS без рекламы</title>
+<style>
+body{font-family:system-ui,sans-serif;max-width:640px;margin:2rem auto;padding:0 1rem;background:#f6f8fa;color:#1f2328;line-height:1.5}
+h1{font-size:1.5rem}h2{font-size:1.1rem;margin-top:1.5rem}
+.card{background:#fff;padding:1.25rem;border-radius:8px;border:1px solid #d0d7de;margin:1rem 0}
+code,pre{background:#eaeef2;padding:.15rem .35rem;border-radius:4px;font-size:.9rem}
+pre{display:block;padding:.75rem;overflow:auto}
+.meta{color:#656d76;font-size:.9rem}a{color:#0969da}
+ol{padding-left:1.2rem}
+</style>
+</head>
+<body>
+<h1>DNS без рекламы</h1>
+<p>Пока включён VPN, запросы имён сайтов можно гнать через фильтр — меньше рекламы и трекеров на телефоне, ПК и ТВ.</p>
+
+<div class="card">
+<h2>Сейчас — за 2 минуты (клиент сам)</h2>
+<p>В приложении VPN укажите DNS AdGuard:</p>
+<ul>
+<li><code>94.140.14.14</code></li>
+<li><code>94.140.15.15</code></li>
+</ul>
+<p><strong>Amnezia:</strong> сервер → протокол → поле DNS → оба адреса → сохранить → переподключиться.</p>
+<p><strong>Hiddify:</strong> настройки профиля / Remote DNS → те же адреса (или DoH <code>https://dns.adguard-dns.com/dns-query</code>) → обновить подписку → переподключиться.</p>
+<p class="meta">Запросы имён уходят на публичный фильтр AdGuard. Сайты, которые «пропали», напишите админу — добавим исключение после перехода на свой фильтр на сервере.</p>
+</div>
+
+<div class="card">
+<h2>Надёжнее — фильтр на вашем VPN-сервере</h2>
+<p>На каждом VPN-VPS (нужен root), один раз:</p>
+<pre>curl -fsSL https://raw.githubusercontent.com/Hertuno/vpn-status-live/main/install-adguard.sh | bash</pre>
+<p>Потом в Amnezia/Hiddify DNS клиентов = <code>GATEWAY</code> туннеля (часто <code>10.8.0.1</code> или <code>10.66.66.1</code>), не <code>1.1.1.1</code>.</p>
+<p class="meta">Так запросы имён остаются на вашем сервере, а не у стороннего фильтра.</p>
+</div>
+
+<p class="meta"><a href="./">← Статус</a> · <a href="family.html">Семейный тариф</a> · <a href="https://ntfy.sh/vpn-hertuno-alert-7f3a9c2e">Пуши</a></p>
+</body>
+</html>

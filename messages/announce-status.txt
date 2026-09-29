@@ -1,0 +1,8 @@
+Если узел не отвечает, Telegram может тоже не открыться. Смотрите статус без VPN:
+https://hertuno.github.io/vpn-status-live/
+
+Пуши на телефон (не через Telegram):
+https://ntfy.sh/vpn-hertuno-alert-7f3a9c2e
+Откройте ссылку → Subscribe / Подписаться.
+
+Запасной ключ из подписки — второй сервер.
