@@ -26,8 +26,8 @@ td,th{padding:.75rem;border-bottom:1px solid #d0d7de;text-align:left}
 <script>
 const STATUS_URLS = [
   'status.json',
-  'https://raw.githubusercontent.com/Hertuno/vpn-status-live/main/status.json',
-  'https://cdn.jsdelivr.net/gh/Hertuno/vpn-status-live@main/status.json'
+  'https://cdn.jsdelivr.net/gh/Hertuno/vpn-status-live@main/status.json',
+  'https://raw.githubusercontent.com/Hertuno/vpn-status-live/main/status.json'
 ];
 async function load(){
   let d = null, err = null;
@@ -56,7 +56,7 @@ async function load(){
   const b = document.getElementById('banner');
   b.textContent = allUp ? 'Все узлы в работе' : 'Есть проблемы — включите запасной ключ';
   b.className = 'banner ' + (allUp ? 'ok' : 'bad');
-  document.getElementById('meta').textContent = 'Проверка: ' + d.checked_at + ' (UTC). Страница без VPN.';
+  document.getElementById('meta').textContent = 'Проверка: ' + d.checked_at + ' (UTC). Страница открывается без VPN.';
 }
 load();
 </script>
