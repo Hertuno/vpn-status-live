@@ -13,6 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: TCP checks
         run: |
           python3 <<'PY'
@@ -40,23 +42,42 @@ jobs:
               out["monitors"].append({"name": m["name"], "up": ok})
               print(f"{m['name']}={'UP' if ok else 'DOWN'}")
 
-          with open("status.json", "w", encoding="utf-8") as f:
-              json.dump(out, f, ensure_ascii=False, indent=2)
-              f.write("\n")
-          down = [m["name"] for m in out["monitors"] if not m["up"]]
-          open("down.txt", "w", encoding="utf-8").write(",".join(down))
+          text = json.dumps(out, ensure_ascii=False, indent=2) + "\n"
+          open("status.json", "w", encoding="utf-8").write(text)
+          open("down.txt", "w", encoding="utf-8").write(
+              ",".join(m["name"] for m in out["monitors"] if not m["up"])
+          )
           PY
-      - name: Commit status.json
+      - name: Commit on main
         run: |
           git config user.name "vpn-status-bot"
           git config user.email "vpn-status-bot@users.noreply.github.com"
           git add status.json
           if git diff --staged --quiet; then
-            echo "No status change"
+            echo "main: no status change"
           else
             git commit -m "chore: status $(date -u +%Y-%m-%dT%H:%MZ)"
             git push
           fi
+      - name: Publish to gh-pages
+        run: |
+          git config user.name "vpn-status-bot"
+          git config user.email "vpn-status-bot@users.noreply.github.com"
+          git fetch origin gh-pages:gh-pages || git checkout --orphan gh-pages
+          git checkout gh-pages
+          # сохранить/обновить только публичные файлы
+          git checkout main -- status.json index.html 2>/dev/null || true
+          # если index с main другой — уже ок; status с main точно берём
+          git checkout main -- status.json
+          if [ ! -f index.html ]; then git checkout main -- index.html; fi
+          git add status.json index.html
+          if git diff --staged --quiet; then
+            echo "gh-pages: no change"
+          else
+            git commit -m "chore: pages status $(date -u +%Y-%m-%dT%H:%MZ)"
+            git push -u origin gh-pages
+          fi
+          git checkout main
       - name: Discord on DOWN
         continue-on-error: true
         env:
