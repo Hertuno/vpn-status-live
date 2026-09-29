@@ -1,0 +1,50 @@
+name: Verify AdGuard DNS filter
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 */12 * * *"
+  push:
+    paths:
+      - ".github/workflows/verify-dns.yml"
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Probe AdGuard DNS (94.140.14.14)
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq && sudo apt-get install -y -qq dnsutils >/dev/null
+          block_hosts=(doubleclick.net google-analytics.com pagead2.googlesyndication.com)
+          ok_hosts=(google.com cloudflare.com)
+          fail=0
+          echo "# DNS filter evidence" > dns-evidence.md
+          echo "Checked at: $(date -u +%Y-%m-%dT%H:%MZ) against 94.140.14.14" >> dns-evidence.md
+          echo >> dns-evidence.md
+          for h in "${block_hosts[@]}"; do
+            ans=$(dig +time=3 +tries=2 +short @94.140.14.14 "$h" A || true)
+            echo "BLOCK? $h -> ${ans:-<empty>}" | tee -a dns-evidence.md
+            # AdGuard usually returns 0.0.0.0 or nothing for blocked
+            if echo "$ans" | grep -Eq '^[0-9.]+$' && ! echo "$ans" | grep -Eq '^(0\.0\.0\.0|127\.0\.0\.1)$'; then
+              echo "WARN: $h resolved to non-sinkhole IP" | tee -a dns-evidence.md
+              fail=1
+            fi
+          done
+          for h in "${ok_hosts[@]}"; do
+            ans=$(dig +time=3 +tries=2 +short @94.140.14.14 "$h" A | head -1 || true)
+            echo "ALLOW? $h -> ${ans:-<empty>}" | tee -a dns-evidence.md
+            if ! echo "$ans" | grep -Eq '^[0-9.]+$' || echo "$ans" | grep -Eq '^(0\.0\.0\.0|127\.0\.0\.1)$'; then
+              echo "FAIL: $h should resolve" | tee -a dns-evidence.md
+              fail=1
+            fi
+          done
+          if [ "$fail" -ne 0 ]; then
+            echo "DNS filter check failed" >&2
+            cat dns-evidence.md
+            exit 1
+          fi
+          echo "DNS filter OK" | tee -a dns-evidence.md
+      - name: Upload evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: dns-evidence
+          path: dns-evidence.md
