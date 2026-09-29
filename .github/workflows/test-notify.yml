@@ -1,5 +1,5 @@
 name: Test notify channels
-# refresh: 2026-09-29T16:50Z — email body = texts to forward to clients
+# refresh: 2026-09-29T16:51Z
 on:
   workflow_dispatch:
   push:
@@ -19,7 +19,7 @@ jobs:
           if [ -n "$NTFY_TOKEN" ]; then HDR+=(-H "Authorization: Bearer ${NTFY_TOKEN}"); fi
           if [ -n "$NTFY_EMAIL" ]; then HDR+=(-H "Email: ${NTFY_EMAIL}"); fi
           curl -fsS "${HDR[@]}" \
-            -d "Скопируй 3 текста клиентам: https://hertuno.github.io/vpn-status-live/operator.html — также продублированы в письме на hertuno@yandex.ru" \
+            -d "Скопируй 3 текста: https://hertuno.github.io/vpn-status-live/operator.html" \
             "https://ntfy.sh/${NTFY_TOPIC}"
           echo "ntfy ok"
       - name: FormSubmit — тексты рассылки в письме
@@ -27,13 +27,13 @@ jobs:
         env:
           FORMSUBMIT_EMAIL: ${{ secrets.FORMSUBMIT_EMAIL }}
         run: |
-          TO="${FORMSUBMIT_EMAIL:-hertuno@yandex.ru}"
+          export TO="${FORMSUBMIT_EMAIL:-hertuno@yandex.ru}"
           python3 <<'PY'
           import json, os, urllib.request
-          to = os.environ.get("TO") or "hertuno@yandex.ru"
-          msg = """Перешли клиентам три сообщения (или открой https://hertuno.github.io/vpn-status-live/operator.html).
+          to = os.environ["TO"]
+          msg = """Перешли клиентам три сообщения (или https://hertuno.github.io/vpn-status-live/operator.html).
 
-Если это первое письмо FormSubmit — нажми Activate, потом запусти Test notify channels ещё раз.
+Если это первое письмо FormSubmit — нажми Activate, потом Actions → Test notify channels → Run ещё раз.
 
 ========== 1) DNS ==========
 Можно включить фильтр рекламы через DNS — занимает пару минут.
@@ -85,5 +85,3 @@ https://ntfy.sh/vpn-hertuno-alert-7f3a9c2e
             print(r.read().decode())
           print("formsubmit ok ->", to)
           PY
-        env:
-          TO: ${{ secrets.FORMSUBMIT_EMAIL }}
