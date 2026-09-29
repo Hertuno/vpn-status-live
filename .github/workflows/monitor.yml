@@ -1,5 +1,5 @@
 name: Monitor VPN nodes
-# refresh-trigger: 2026-09-29T16:15Z
+# refresh-trigger: 2026-09-29T16:35Z
 on:
   schedule:
     - cron: "*/5 * * * *"
@@ -77,8 +77,8 @@ jobs:
           git config user.email "vpn-status-bot@users.noreply.github.com"
           git fetch origin gh-pages:gh-pages
           git checkout gh-pages
-          git checkout main -- status.json index.html family.html dns.html
-          git add status.json index.html family.html dns.html
+          git checkout main -- status.json index.html family.html dns.html operator.html
+          git add status.json index.html family.html dns.html operator.html
           if git diff --staged --quiet; then
             echo "gh-pages: no change"
           else

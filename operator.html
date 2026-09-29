@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Оператор — рассылка</title>
+<style>
+body{font-family:system-ui,sans-serif;max-width:720px;margin:2rem auto;padding:0 1rem;background:#f6f8fa;color:#1f2328;line-height:1.45}
+h1{font-size:1.35rem}h2{font-size:1.05rem;margin:0 0 .5rem}
+.card{background:#fff;border:1px solid #d0d7de;border-radius:8px;padding:1rem;margin:1rem 0}
+pre{white-space:pre-wrap;background:#eaeef2;padding:.75rem;border-radius:6px;font-size:.85rem;margin:0 0 .75rem}
+button{background:#1f2328;color:#fff;border:0;border-radius:6px;padding:.55rem 1rem;cursor:pointer;font-size:.95rem}
+button:hover{opacity:.9}
+button.done{background:#1a7f37}
+.meta{color:#656d76;font-size:.9rem}a{color:#0969da}
+ol{padding-left:1.2rem}
+</style>
+</head>
+<body>
+<h1>Рассылка клиентам</h1>
+<p class="meta">Три кнопки → вставить в Telegram (или куда пишешь). После отправки закрой <a href="https://github.com/Hertuno/vpn-status-live/issues/1">issue #1</a>.</p>
+<ol class="meta">
+<li>DNS без рекламы</li>
+<li>Статус + пуши (не Telegram)</li>
+<li>Семейный тариф</li>
+</ol>
+
+<div class="card">
+<h2>1) DNS</h2>
+<pre id="m1">Можно включить фильтр рекламы через DNS — занимает пару минут.
+
+Инструкция: https://hertuno.github.io/vpn-status-live/dns.html
+
+В VPN укажите DNS:
+94.140.14.14
+94.140.15.15
+
+Потом переподключитесь. Телевизор, телефон и компьютер начнут получать «чистый» DNS, пока включён VPN.
+
+Если какой-то нужный сайт вдруг не откроется — напишите точный адрес.
+Запасной ключ из подписки работает как раньше.</pre>
+<button type="button" data-target="m1">Скопировать DNS</button>
+</div>
+
+<div class="card">
+<h2>2) Статус и пуши</h2>
+<pre id="m2">Если узел не отвечает, Telegram может тоже не открыться. Смотрите статус без VPN:
+https://hertuno.github.io/vpn-status-live/
+
+Пуши на телефон (не через Telegram):
+https://ntfy.sh/vpn-hertuno-alert-7f3a9c2e
+Откройте ссылку → Subscribe / Подписаться.
+
+Запасной ключ из подписки — второй сервер.</pre>
+<button type="button" data-target="m2">Скопировать статус</button>
+</div>
+
+<div class="card">
+<h2>3) Семья</h2>
+<pre id="m3">Появился семейный тариф: один счёт на весь дом (до 8 устройств), два сервера, статус и оповещения при сбоях, фильтр рекламы.
+
+Цена: ваш текущий годовой × 1.7 (выгоднее двух отдельных подписок).
+
+Подробности: https://hertuno.github.io/vpn-status-live/family.html
+
+Если дома уже несколько человек — напишите, переведём и выдадим ключи под устройства.</pre>
+<button type="button" data-target="m3">Скопировать семью</button>
+</div>
+
+<div class="card">
+<h2>Почта (2 минуты)</h2>
+<p class="meta">ntfy.sh → Account → подтвердить email → Access token.<br/>
+GitHub → Settings → Secrets → Actions: <code>NTFY_TOKEN</code>, <code>NTFY_EMAIL</code>.<br/>
+Потом Actions → <strong>Test notify channels</strong> → Run.</p>
+<p class="meta">Подробности: <a href="https://github.com/Hertuno/vpn-status-live/blob/main/EMAIL.md">EMAIL.md</a></p>
+</div>
+
+<p class="meta"><a href="./">← Статус</a> · <a href="https://github.com/Hertuno/vpn-status-live/blob/main/SEND.md">SEND.md</a></p>
+<script>
+document.querySelectorAll('button[data-target]').forEach(btn=>{
+  btn.addEventListener('click', async ()=>{
+    const t=document.getElementById(btn.dataset.target).textContent;
+    try{
+      await navigator.clipboard.writeText(t);
+      const old=btn.textContent; btn.textContent='Скопировано'; btn.classList.add('done');
+      setTimeout(()=>{btn.textContent=old; btn.classList.remove('done');},1500);
+    }catch(e){
+      btn.textContent='Выдели текст вручную';
+    }
+  });
+});
+</script>
+</body>
+</html>
