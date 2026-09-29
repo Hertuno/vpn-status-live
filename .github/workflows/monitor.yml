@@ -46,7 +46,6 @@ jobs:
               json.dumps(out, ensure_ascii=False, indent=2) + "\n"
           )
           down = [m["name"] for m in out["monitors"] if not m["up"]]
-          open("down.txt", "w", encoding="utf-8").write(",".join(down))
           try:
               prev = json.load(open("prev-status.json", encoding="utf-8"))
               prev_down = {m["name"] for m in prev.get("monitors", []) if not m.get("up")}
@@ -102,7 +101,7 @@ jobs:
               -d "Снова в работе: ${NEW_UP}. https://hertuno.github.io/vpn-status-live/" \
               "https://ntfy.sh/${NTFY_TOPIC}"
           fi
-      - name: Email on change (optional secrets)
+      - name: Email on change
         continue-on-error: true
         env:
           SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
@@ -112,40 +111,41 @@ jobs:
           MAIL_FROM: ${{ secrets.MAIL_FROM }}
           MAIL_TO: ${{ secrets.MAIL_TO }}
         run: |
-          NEW_DOWN=$(cat notify-down.txt || true)
-          NEW_UP=$(cat notify-up.txt || true)
+          export NEW_DOWN=$(cat notify-down.txt || true)
+          export NEW_UP=$(cat notify-up.txt || true)
           if [ -z "$NEW_DOWN" ] && [ -z "$NEW_UP" ]; then echo "No mail events"; exit 0; fi
-          if [ -z "$SMTP_SERVER" ] || [ -z "$MAIL_TO" ]; then echo "SMTP secrets not set"; exit 0; fi
-          SUBJ="[VPN] status change"
-          BODY="DOWN: ${NEW_DOWN}\nUP: ${NEW_UP}\nhttps://hertuno.github.io/vpn-status-live/"
-          # raw SMTP via Python
-          python3 <<'PY'
-          import os, smtplib, ssl
-          from email.message import EmailMessage
-          subj = "[VPN] status change"
-          body = f"DOWN: {os.environ.get('NEW_DOWN','')}\nUP: {os.environ.get('NEW_UP','')}\nhttps://hertuno.github.io/vpn-status-live/"
-          # pass via env files
-          PY
-          export NEW_DOWN NEW_UP
+          if [ -z "$SMTP_SERVER" ] || [ -z "$MAIL_TO" ] || [ -z "$MAIL_FROM" ]; then
+            echo "SMTP secrets not set — skip mail"
+            exit 0
+          fi
           python3 - <<'PY'
           import os, smtplib, ssl
           from email.message import EmailMessage
+          down = os.environ.get("NEW_DOWN", "")
+          up = os.environ.get("NEW_UP", "")
           msg = EmailMessage()
-          down, up = os.environ.get("NEW_DOWN",""), os.environ.get("NEW_UP","")
-          msg["Subject"] = "[VPN] " + ("недоступен: "+down if down else "восстановлен: "+up)
+          msg["Subject"] = "[VPN] " + (("недоступен: " + down) if down else ("восстановлен: " + up))
           msg["From"] = os.environ["MAIL_FROM"]
           msg["To"] = os.environ["MAIL_TO"]
-          msg.set_content(f"DOWN: {down}\nUP: {up}\nСтатус: https://hertuno.github.io/vpn-status-live/\nЗапасной ключ — второй сервер.\n")
+          msg.set_content(
+              f"DOWN: {down}\nUP: {up}\n"
+              "Статус: https://hertuno.github.io/vpn-status-live/\n"
+              "Запасной ключ — второй сервер.\n"
+          )
           port = int(os.environ.get("SMTP_PORT") or "587")
           host = os.environ["SMTP_SERVER"]
-          user, password = os.environ["SMTP_USERNAME"], os.environ["SMTP_PASSWORD"]
+          user = os.environ["SMTP_USERNAME"]
+          password = os.environ["SMTP_PASSWORD"]
           ctx = ssl.create_default_context()
           if port == 465:
               with smtplib.SMTP_SSL(host, port, context=ctx, timeout=30) as s:
-                  s.login(user, password); s.send_message(msg)
+                  s.login(user, password)
+                  s.send_message(msg)
           else:
               with smtplib.SMTP(host, port, timeout=30) as s:
-                  s.starttls(context=ctx); s.login(user, password); s.send_message(msg)
+                  s.starttls(context=ctx)
+                  s.login(user, password)
+                  s.send_message(msg)
           print("mail sent")
           PY
       - name: Discord
