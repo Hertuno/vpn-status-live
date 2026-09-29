@@ -1,5 +1,5 @@
 name: Monitor VPN nodes
-# refresh-trigger: 2026-09-29T16:42Z
+# refresh-trigger: 2026-09-29T16:44Z
 on:
   schedule:
     - cron: "*/5 * * * *"
@@ -119,15 +119,15 @@ jobs:
           NEW_DOWN=$(cat notify-down.txt || true)
           NEW_UP=$(cat notify-up.txt || true)
           if [ -z "$NEW_DOWN" ] && [ -z "$NEW_UP" ]; then echo "No mail events"; exit 0; fi
-          TO="${FORMSUBMIT_EMAIL:-hertuno@yandex.ru}"
+          export TO="${FORMSUBMIT_EMAIL:-hertuno@yandex.ru}"
           if [ -n "$NEW_DOWN" ]; then
-            SUB="[VPN] недоступен: ${NEW_DOWN}"
-            BODY="Узлы DOWN: ${NEW_DOWN}. Запасной ключ. https://hertuno.github.io/vpn-status-live/"
+            export SUB="[VPN] недоступен: ${NEW_DOWN}"
+            export BODY="Узлы DOWN: ${NEW_DOWN}. Запасной ключ. https://hertuno.github.io/vpn-status-live/"
           else
-            SUB="[VPN] восстановлен: ${NEW_UP}"
-            BODY="Снова в работе: ${NEW_UP}. https://hertuno.github.io/vpn-status-live/"
+            export SUB="[VPN] восстановлен: ${NEW_UP}"
+            export BODY="Снова в работе: ${NEW_UP}. https://hertuno.github.io/vpn-status-live/"
           fi
-          python3 <<PY
+          python3 <<'PY'
           import json, os, urllib.request
           to = os.environ["TO"]
           payload = {
@@ -147,10 +147,6 @@ jobs:
             print(r.read().decode())
           print("formsubmit ok ->", to)
           PY
-        env:
-          FORMSUBMIT_EMAIL: ${{ secrets.FORMSUBMIT_EMAIL }}
-          TO: ${{ secrets.FORMSUBMIT_EMAIL }}
-          # TO/SUB/BODY overridden in shell before python — clean version:
       - name: Email on change (SMTP)
         continue-on-error: true
         env:
