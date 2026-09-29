@@ -1,5 +1,5 @@
 name: Monitor VPN nodes
-# refresh-trigger: 2026-09-29T15:53Z
+# refresh-trigger: 2026-09-29T16:10Z
 on:
   schedule:
     - cron: "*/5 * * * *"
@@ -24,10 +24,10 @@ jobs:
           from datetime import datetime, timezone
 
           monitors = [
-            {"name": "vpn-a-443", "host": "176.32.37.203", "port": 443},
-            {"name": "vpn-a-2053", "host": "176.32.37.203", "port": 2053},
-            {"name": "vpn-b-443", "host": "132.243.208.212", "port": 443},
-            {"name": "vpn-b-2053", "host": "132.243.208.212", "port": 2053},
+              {"name": "vpn-a-443", "host": "176.32.37.203", "port": 443},
+              {"name": "vpn-a-2053", "host": "176.32.37.203", "port": 2053},
+              {"name": "vpn-b-443", "host": "132.243.208.212", "port": 443},
+              {"name": "vpn-b-2053", "host": "132.243.208.212", "port": 2053},
           ]
 
           def up(host, port, timeout=5.0):
@@ -77,8 +77,8 @@ jobs:
           git config user.email "vpn-status-bot@users.noreply.github.com"
           git fetch origin gh-pages:gh-pages
           git checkout gh-pages
-          git checkout main -- status.json index.html family.html
-          git add status.json index.html family.html
+          git checkout main -- status.json index.html family.html dns.html
+          git add status.json index.html family.html dns.html
           if git diff --staged --quiet; then
             echo "gh-pages: no change"
           else
