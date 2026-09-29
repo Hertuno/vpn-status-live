@@ -1,14 +1,16 @@
-# VPN status (public)
+# VPN status + helpers
 
-Страница для клиентов **без VPN**:
+## Статус (без VPN)
+https://hertuno.github.io/vpn-status-live/
 
-- https://raw.githack.com/Hertuno/vpn-status-live/main/index.html
-- https://cdn.jsdelivr.net/gh/Hertuno/vpn-status-live@main/index.html
+## Пуш при сбоях (ntfy)
+https://ntfy.sh/vpn-hertuno-alert-7f3a9c2e
 
-Данные в `status.json` обновляет GitHub Action каждые 5 минут (и вручную: Actions → Monitor VPN nodes → Run workflow).
+## Почта
+[EMAIL.md](EMAIL.md) — GitHub Secrets SMTP_*
 
-IP узлов на странице не показываются.
-
-Опционально: Settings → Secrets → `DISCORD_WEBHOOK_URL` — сообщение в Discord при DOWN.
-
-GitHub Pages: Settings → Pages → Source: GitHub Actions (workflow `pages.yml`).
+## DNS без рекламы на VPN-сервере
+```bash
+curl -fsSL https://raw.githubusercontent.com/Hertuno/vpn-status-live/main/install-adguard.sh | bash
+# или: curl -fsSL ... | GATEWAY=10.8.0.1 bash
+```
