@@ -1,4 +1,5 @@
 name: Monitor VPN nodes
+# refresh-trigger: 2026-09-29T15:53Z
 on:
   schedule:
     - cron: "*/5 * * * *"
@@ -6,6 +7,7 @@ on:
   push:
     paths:
       - ".github/workflows/monitor.yml"
+      - ".github/workflows/.monitor-bump"
 permissions:
   contents: write
 jobs:
