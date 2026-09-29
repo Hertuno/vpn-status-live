@@ -42,17 +42,29 @@ jobs:
               out["monitors"].append({"name": m["name"], "up": ok})
               print(f"{m['name']}={'UP' if ok else 'DOWN'}")
 
-          text = json.dumps(out, ensure_ascii=False, indent=2) + "\n"
-          open("status.json", "w", encoding="utf-8").write(text)
-          open("down.txt", "w", encoding="utf-8").write(
-              ",".join(m["name"] for m in out["monitors"] if not m["up"])
+          open("status.json", "w", encoding="utf-8").write(
+              json.dumps(out, ensure_ascii=False, indent=2) + "\n"
+          )
+          down = [m["name"] for m in out["monitors"] if not m["up"]]
+          open("down.txt", "w", encoding="utf-8").write(",".join(down))
+          # предыдущее состояние для UP-уведомлений
+          try:
+              prev = json.load(open("prev-status.json", encoding="utf-8"))
+              prev_down = {m["name"] for m in prev.get("monitors", []) if not m.get("up")}
+          except Exception:
+              prev_down = set(down)  # первый запуск — не спамить DOWN
+          cur_down = set(down)
+          open("notify-down.txt", "w").write(",".join(sorted(cur_down - prev_down)))
+          open("notify-up.txt", "w").write(",".join(sorted(prev_down - cur_down)))
+          open("prev-status.json", "w", encoding="utf-8").write(
+              json.dumps(out, ensure_ascii=False, indent=2) + "\n"
           )
           PY
       - name: Commit on main
         run: |
           git config user.name "vpn-status-bot"
           git config user.email "vpn-status-bot@users.noreply.github.com"
-          git add status.json
+          git add status.json prev-status.json
           if git diff --staged --quiet; then
             echo "main: no status change"
           else
@@ -63,29 +75,43 @@ jobs:
         run: |
           git config user.name "vpn-status-bot"
           git config user.email "vpn-status-bot@users.noreply.github.com"
-          git fetch origin gh-pages:gh-pages || git checkout --orphan gh-pages
+          git fetch origin gh-pages:gh-pages
           git checkout gh-pages
-          # сохранить/обновить только публичные файлы
-          git checkout main -- status.json index.html 2>/dev/null || true
-          # если index с main другой — уже ок; status с main точно берём
-          git checkout main -- status.json
-          if [ ! -f index.html ]; then git checkout main -- index.html; fi
+          git checkout main -- status.json index.html
           git add status.json index.html
           if git diff --staged --quiet; then
             echo "gh-pages: no change"
           else
             git commit -m "chore: pages status $(date -u +%Y-%m-%dT%H:%MZ)"
-            git push -u origin gh-pages
+            git push origin gh-pages
           fi
           git checkout main
+      - name: Notify ntfy (no Telegram)
+        continue-on-error: true
+        env:
+          # Публичный топик; клиенты подписываются по ссылке. Смени при желании.
+          NTFY_TOPIC: vpn-hertuno-alert-7f3a9c2e
+        run: |
+          NEW_DOWN=$(cat notify-down.txt || true)
+          NEW_UP=$(cat notify-up.txt || true)
+          if [ -n "$NEW_DOWN" ]; then
+            curl -fsS -H "Title: VPN недоступен" -H "Priority: high" -H "Tags: warning" \
+              -d "Узлы: ${NEW_DOWN}. Включите запасной ключ. Статус: https://hertuno.github.io/vpn-status-live/" \
+              "https://ntfy.sh/${NTFY_TOPIC}"
+          fi
+          if [ -n "$NEW_UP" ]; then
+            curl -fsS -H "Title: VPN восстановлен" -H "Tags: white_check_mark" \
+              -d "Снова в работе: ${NEW_UP}. https://hertuno.github.io/vpn-status-live/" \
+              "https://ntfy.sh/${NTFY_TOPIC}"
+          fi
       - name: Discord on DOWN
         continue-on-error: true
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
-          DOWN=$(cat down.txt || true)
-          if [ -z "$DOWN" ]; then echo "All up"; exit 0; fi
-          if [ -z "$DISCORD_WEBHOOK_URL" ]; then echo "No DISCORD_WEBHOOK_URL secret"; exit 0; fi
+          NEW_DOWN=$(cat notify-down.txt || true)
+          if [ -z "$NEW_DOWN" ]; then echo "No new DOWN"; exit 0; fi
+          if [ -z "$DISCORD_WEBHOOK_URL" ]; then echo "No Discord secret"; exit 0; fi
           curl -fsS -H 'Content-Type: application/json' \
-            -d "{\"content\":\"**[VPN] DOWN:** ${DOWN}\\nВключите запасной ключ (второй сервер).\"}" \
+            -d "{\"content\":\"**[VPN] DOWN:** ${NEW_DOWN}\\nЗапасной ключ + https://hertuno.github.io/vpn-status-live/\"}" \
             "$DISCORD_WEBHOOK_URL"
