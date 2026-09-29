@@ -1,8 +1,14 @@
 # VPN status (public)
 
-Страница статуса для клиентов (без VPN).
+Страница для клиентов **без VPN**:
 
-После первого push с workflow Pages:
-https://hertuno.github.io/vpn-status-live/
+- https://raw.githack.com/Hertuno/vpn-status-live/main/index.html
+- https://cdn.jsdelivr.net/gh/Hertuno/vpn-status-live@main/index.html
 
-Обновление: копируй актуальный `status.json` с машины монитора (без IP) или правь вручную.
+Данные в `status.json` обновляет GitHub Action каждые 5 минут (и вручную: Actions → Monitor VPN nodes → Run workflow).
+
+IP узлов на странице не показываются.
+
+Опционально: Settings → Secrets → `DISCORD_WEBHOOK_URL` — сообщение в Discord при DOWN.
+
+GitHub Pages: Settings → Pages → Source: GitHub Actions (workflow `pages.yml`).

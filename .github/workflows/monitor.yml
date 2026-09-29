@@ -1,0 +1,78 @@
+name: Monitor VPN nodes
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: TCP checks
+        id: check
+        run: |
+          python3 <<'PY'
+          import json, socket
+          from datetime import datetime, timezone
+
+          monitors = [
+            {"name": "vpn-a-443", "host": "176.32.37.203", "port": 443},
+            {"name": "vpn-a-2053", "host": "176.32.37.203", "port": 2053},
+            {"name": "vpn-b-443", "host": "132.243.208.212", "port": 443},
+            {"name": "vpn-b-2053", "host": "132.243.208.212", "port": 2053},
+          ]
+
+          def up(host, port, timeout=5.0):
+              try:
+                  with socket.create_connection((host, port), timeout=timeout):
+                      return True
+              except OSError:
+                  return False
+
+          now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+          out = {"checked_at": now, "monitors": []}
+          for m in monitors:
+              ok = up(m["host"], m["port"])
+              out["monitors"].append({"name": m["name"], "up": ok})
+              print(f"{m['name']}={'UP' if ok else 'DOWN'}")
+
+          with open("status.json", "w", encoding="utf-8") as f:
+              json.dump(out, f, ensure_ascii=False, indent=2)
+              f.write("\n")
+
+          # для Discord-шага
+          down = [m["name"] for m in out["monitors"] if not m["up"]]
+          with open("down.txt", "w", encoding="utf-8") as f:
+              f.write(",".join(down))
+          PY
+      - name: Commit status.json
+        run: |
+          git config user.name "vpn-status-bot"
+          git config user.email "vpn-status-bot@users.noreply.github.com"
+          git add status.json
+          if git diff --staged --quiet; then
+            echo "No status change"
+          else
+            git commit -m "chore: status $(date -u +%Y-%m-%dT%H:%MZ)"
+            git push
+          fi
+      - name: Discord on DOWN
+        if: ${{ env.HAS_HOOK == 'true' }}
+        env:
+          HAS_HOOK: ${{ secrets.DISCORD_WEBHOOK_URL != '' }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          DOWN=$(cat down.txt || true)
+          if [ -z "$DOWN" ]; then
+            echo "All up"
+            exit 0
+          fi
+          if [ -z "$DISCORD_WEBHOOK_URL" ]; then
+            echo "No webhook secret"
+            exit 0
+          fi
+          curl -fsS -H 'Content-Type: application/json' \
+            -d "{\"content\":\"**[VPN] DOWN:** ${DOWN}\\nЗапасной ключ / второй сервер.\"}" \
+            "$DISCORD_WEBHOOK_URL"
