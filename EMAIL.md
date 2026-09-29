@@ -1,30 +1,38 @@
 # Почта при падении
 
-## A. FormSubmit (уже в мониторе, без Secrets)
+## A. FormSubmit (без SMTP) — активация из браузера
 
-Письма уходят на **hertuno@yandex.ru** через FormSubmit при DOWN/UP.
+Письма из GitHub Actions на FormSubmit часто **не доходят**. Активируй форму так:
 
-**Один раз:** после первого теста открой ящик Яндекса → письмо FormSubmit → Activate.
-Потом: Actions → **Test notify channels** → Run workflow.
+1. Открой https://hertuno.github.io/vpn-status-live/activate-mail.html
+2. Нажми кнопку
+3. Яндекс-почта (`hertuno@yandex.ru`) → Входящие **и Спам** → Activate
 
-Сменить ящик: Secret `FORMSUBMIT_EMAIL` = другой адрес (тоже нужно Activate).
+После Activate монитор шлёт письма при DOWN/UP на тот же ящик.
 
-## B. Через ntfy
+Сменить ящик: Secret `FORMSUBMIT_EMAIL` + та же активация с другого адреса (поменяй email в `activate-mail.html`).
+
+## B. Свой SMTP Яндекс (надёжнее для продакшена)
+
+1. Яндекс ID → Пароли приложений → создать пароль для «Почта»
+2. Secrets в репо:
+
+| Secret | Значение |
+|---|---|
+| `SMTP_SERVER` | `smtp.yandex.ru` |
+| `SMTP_PORT` | `465` |
+| `SMTP_USERNAME` | `hertuno@yandex.ru` |
+| `SMTP_PASSWORD` | пароль приложения |
+| `MAIL_FROM` | `hertuno@yandex.ru` |
+| `MAIL_TO` | `hertuno@yandex.ru` (потом можно список клиентов) |
+
+3. Actions → Test notify channels → Run
+
+## C. ntfy + email
 
 | Secret | Значение |
 |---|---|
 | `NTFY_TOKEN` | токен ntfy Account |
 | `NTFY_EMAIL` | подтверждённый ящик |
 
-## C. Свой SMTP (много получателей)
-
-| Secret | Пример |
-|---|---|
-| `SMTP_SERVER` | `smtp.yandex.ru` |
-| `SMTP_PORT` | `587` или `465` |
-| `SMTP_USERNAME` | логин |
-| `SMTP_PASSWORD` | пароль приложения |
-| `MAIL_FROM` | тот же ящик |
-| `MAIL_TO` | получатели через запятую |
-
-Пуши ntfy уже работают: https://ntfy.sh/vpn-hertuno-alert-7f3a9c2e
+Пуши без почты уже работают: https://ntfy.sh/vpn-hertuno-alert-7f3a9c2e
