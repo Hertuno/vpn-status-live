@@ -14,13 +14,24 @@ jobs:
           NTFY_TOKEN: ${{ secrets.NTFY_TOKEN }}
           NTFY_EMAIL: ${{ secrets.NTFY_EMAIL }}
         run: |
-          HDR=(-H "Title: VPN: пора SEND.md" -H "Tags: bell" -H "Click: https://github.com/Hertuno/vpn-status-live/blob/main/SEND.md")
+          HDR=(-H "Title: VPN тест оповещений" -H "Tags: bell" -H "Click: https://hertuno.github.io/vpn-status-live/operator.html")
           if [ -n "$NTFY_TOKEN" ]; then HDR+=(-H "Authorization: Bearer ${NTFY_TOKEN}"); fi
           if [ -n "$NTFY_EMAIL" ]; then HDR+=(-H "Email: ${NTFY_EMAIL}"); fi
           curl -fsS "${HDR[@]}" \
-            -d "Скопируй 3 блока клиентам: https://github.com/Hertuno/vpn-status-live/blob/main/SEND.md — DNS, статус/пуши, семья. Почта: EMAIL.md (NTFY_TOKEN+NTFY_EMAIL)." \
+            -d "Тест. Оператор: https://hertuno.github.io/vpn-status-live/operator.html" \
             "https://ntfy.sh/${NTFY_TOPIC}"
           echo "ntfy ok"
+      - name: FormSubmit email test
+        continue-on-error: true
+        env:
+          FORMSUBMIT_EMAIL: ${{ secrets.FORMSUBMIT_EMAIL }}
+        run: |
+          TO="${FORMSUBMIT_EMAIL:-hertuno@yandex.ru}"
+          curl -fsS -X POST "https://formsubmit.co/ajax/${TO}" \
+            -H "Content-Type: application/json" \
+            -H "Accept: application/json" \
+            -d "{\"name\":\"VPN monitor\",\"_subject\":\"[VPN] тест почты\",\"_template\":\"table\",\"_captcha\":\"false\",\"message\":\"Тест почты при сбоях. Статус: https://hertuno.github.io/vpn-status-live/ Если это первое письмо FormSubmit — нажмите Activate в ящике.\"}"
+          echo "formsubmit posted to ${TO}"
       - name: SMTP email test (if secrets set)
         continue-on-error: true
         env:
@@ -39,10 +50,10 @@ jobs:
           import os, smtplib, ssl
           from email.message import EmailMessage
           msg = EmailMessage()
-          msg["Subject"] = "[VPN] тест почты"
+          msg["Subject"] = "[VPN] тест почты SMTP"
           msg["From"] = os.environ["MAIL_FROM"]
           msg["To"] = os.environ["MAIL_TO"]
-          msg.set_content("Тест почты при сбоях VPN.\nhttps://hertuno.github.io/vpn-status-live/\n")
+          msg.set_content("Тест SMTP.\nhttps://hertuno.github.io/vpn-status-live/\n")
           port = int(os.environ.get("SMTP_PORT") or "587")
           host = os.environ["SMTP_SERVER"]
           user, password = os.environ["SMTP_USERNAME"], os.environ["SMTP_PASSWORD"]

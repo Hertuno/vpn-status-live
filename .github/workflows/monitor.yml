@@ -1,5 +1,5 @@
 name: Monitor VPN nodes
-# refresh-trigger: 2026-09-29T16:35Z
+# refresh-trigger: 2026-09-29T16:40Z
 on:
   schedule:
     - cron: "*/5 * * * *"
@@ -111,6 +111,30 @@ jobs:
               -d "Снова в работе: ${NEW_UP}. https://hertuno.github.io/vpn-status-live/" \
               "https://ntfy.sh/${NTFY_TOPIC}"
           fi
+      - name: Email via FormSubmit
+        continue-on-error: true
+        env:
+          FORMSUBMIT_EMAIL: ${{ secrets.FORMSUBMIT_EMAIL }}
+        run: |
+          NEW_DOWN=$(cat notify-down.txt || true)
+          NEW_UP=$(cat notify-up.txt || true)
+          if [ -z "$NEW_DOWN" ] && [ -z "$NEW_UP" ]; then echo "No mail events"; exit 0; fi
+          TO="${FORMSUBMIT_EMAIL:-hertuno@yandex.ru}"
+          if [ -n "$NEW_DOWN" ]; then
+            SUB="[VPN] недоступен: ${NEW_DOWN}"
+            BODY="Узлы DOWN: ${NEW_DOWN}. Запасной ключ. https://hertuno.github.io/vpn-status-live/"
+          else
+            SUB="[VPN] восстановлен: ${NEW_UP}"
+            BODY="Снова в работе: ${NEW_UP}. https://hertuno.github.io/vpn-status-live/"
+          fi
+          curl -fsS -X POST "https://formsubmit.co/ajax/${TO}" \
+            -H "Content-Type: application/json" \
+            -H "Accept: application/json" \
+            -d "$(python3 -c "import json,os; print(json.dumps({'name':'VPN monitor','_subject':os.environ['SUB'],'_template':'table','_captcha':'false','message':os.environ['BODY']}))" )"
+          echo "formsubmit ok -> ${TO}"
+        env:
+          FORMSUBMIT_EMAIL: ${{ secrets.FORMSUBMIT_EMAIL }}
+          # SUB/BODY set in run via export — fix below
       - name: Email on change (SMTP)
         continue-on-error: true
         env:
