@@ -1,0 +1,52 @@
+name: Test notify channels
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/test-notify.yml"
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: ntfy test
+        env:
+          NTFY_TOPIC: vpn-hertuno-alert-7f3a9c2e
+        run: |
+          curl -fsS -H "Title: VPN тест оповещений" -H "Tags: bell" \
+            -d "Тест канала без Telegram. Статус: https://hertuno.github.io/vpn-status-live/ Семейный: https://hertuno.github.io/vpn-status-live/family.html" \
+            "https://ntfy.sh/${NTFY_TOPIC}"
+          echo "ntfy ok"
+      - name: email test (if secrets set)
+        continue-on-error: true
+        env:
+          SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          MAIL_FROM: ${{ secrets.MAIL_FROM }}
+          MAIL_TO: ${{ secrets.MAIL_TO }}
+        run: |
+          if [ -z "$SMTP_SERVER" ] || [ -z "$MAIL_TO" ]; then
+            echo "SMTP secrets not set — email test skipped"
+            exit 0
+          fi
+          python3 - <<'PY'
+          import os, smtplib, ssl
+          from email.message import EmailMessage
+          msg = EmailMessage()
+          msg["Subject"] = "[VPN] тест почты"
+          msg["From"] = os.environ["MAIL_FROM"]
+          msg["To"] = os.environ["MAIL_TO"]
+          msg.set_content("Тест почты при сбоях VPN.\nhttps://hertuno.github.io/vpn-status-live/\n")
+          port = int(os.environ.get("SMTP_PORT") or "587")
+          host = os.environ["SMTP_SERVER"]
+          user, password = os.environ["SMTP_USERNAME"], os.environ["SMTP_PASSWORD"]
+          ctx = ssl.create_default_context()
+          if port == 465:
+              with smtplib.SMTP_SSL(host, port, context=ctx, timeout=30) as s:
+                  s.login(user, password); s.send_message(msg)
+          else:
+              with smtplib.SMTP(host, port, timeout=30) as s:
+                  s.starttls(context=ctx); s.login(user, password); s.send_message(msg)
+          print("email ok")
+          PY
