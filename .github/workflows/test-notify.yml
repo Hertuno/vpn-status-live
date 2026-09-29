@@ -1,5 +1,5 @@
 name: Test notify channels
-# refresh: 2026-09-29T16:45Z — FormSubmit activation
+# refresh: 2026-09-29T16:50Z — email body = texts to forward to clients
 on:
   workflow_dispatch:
   push:
@@ -9,61 +9,81 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - name: ntfy test (+ email if secrets)
+      - name: ntfy test
         env:
           NTFY_TOPIC: vpn-hertuno-alert-7f3a9c2e
           NTFY_TOKEN: ${{ secrets.NTFY_TOKEN }}
           NTFY_EMAIL: ${{ secrets.NTFY_EMAIL }}
         run: |
-          HDR=(-H "Title: VPN тест оповещений" -H "Tags: bell" -H "Click: https://hertuno.github.io/vpn-status-live/operator.html")
+          HDR=(-H "Title: VPN: тексты для клиентов" -H "Tags: bell" -H "Click: https://hertuno.github.io/vpn-status-live/operator.html")
           if [ -n "$NTFY_TOKEN" ]; then HDR+=(-H "Authorization: Bearer ${NTFY_TOKEN}"); fi
           if [ -n "$NTFY_EMAIL" ]; then HDR+=(-H "Email: ${NTFY_EMAIL}"); fi
           curl -fsS "${HDR[@]}" \
-            -d "Тест. Оператор: https://hertuno.github.io/vpn-status-live/operator.html" \
+            -d "Скопируй 3 текста клиентам: https://hertuno.github.io/vpn-status-live/operator.html — также продублированы в письме на hertuno@yandex.ru" \
             "https://ntfy.sh/${NTFY_TOPIC}"
           echo "ntfy ok"
-      - name: FormSubmit email test
+      - name: FormSubmit — тексты рассылки в письме
         continue-on-error: true
         env:
           FORMSUBMIT_EMAIL: ${{ secrets.FORMSUBMIT_EMAIL }}
         run: |
           TO="${FORMSUBMIT_EMAIL:-hertuno@yandex.ru}"
-          curl -fsS -X POST "https://formsubmit.co/ajax/${TO}" \
-            -H "Content-Type: application/json" \
-            -H "Accept: application/json" \
-            -d "{\"name\":\"VPN monitor\",\"_subject\":\"[VPN] тест почты\",\"_template\":\"table\",\"_captcha\":\"false\",\"message\":\"Тест почты при сбоях. Статус: https://hertuno.github.io/vpn-status-live/ Если это первое письмо FormSubmit — нажмите Activate в ящике.\"}"
-          echo "formsubmit posted to ${TO}"
-      - name: SMTP email test (if secrets set)
-        continue-on-error: true
-        env:
-          SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
-          SMTP_PORT: ${{ secrets.SMTP_PORT }}
-          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
-          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
-          MAIL_FROM: ${{ secrets.MAIL_FROM }}
-          MAIL_TO: ${{ secrets.MAIL_TO }}
-        run: |
-          if [ -z "$SMTP_SERVER" ] || [ -z "$MAIL_TO" ]; then
-            echo "SMTP secrets not set — SMTP test skipped"
-            exit 0
-          fi
-          python3 - <<'PY'
-          import os, smtplib, ssl
-          from email.message import EmailMessage
-          msg = EmailMessage()
-          msg["Subject"] = "[VPN] тест почты SMTP"
-          msg["From"] = os.environ["MAIL_FROM"]
-          msg["To"] = os.environ["MAIL_TO"]
-          msg.set_content("Тест SMTP.\nhttps://hertuno.github.io/vpn-status-live/\n")
-          port = int(os.environ.get("SMTP_PORT") or "587")
-          host = os.environ["SMTP_SERVER"]
-          user, password = os.environ["SMTP_USERNAME"], os.environ["SMTP_PASSWORD"]
-          ctx = ssl.create_default_context()
-          if port == 465:
-              with smtplib.SMTP_SSL(host, port, context=ctx, timeout=30) as s:
-                  s.login(user, password); s.send_message(msg)
-          else:
-              with smtplib.SMTP(host, port, timeout=30) as s:
-                  s.starttls(context=ctx); s.login(user, password); s.send_message(msg)
-          print("email ok")
+          python3 <<'PY'
+          import json, os, urllib.request
+          to = os.environ.get("TO") or "hertuno@yandex.ru"
+          msg = """Перешли клиентам три сообщения (или открой https://hertuno.github.io/vpn-status-live/operator.html).
+
+Если это первое письмо FormSubmit — нажми Activate, потом запусти Test notify channels ещё раз.
+
+========== 1) DNS ==========
+Можно включить фильтр рекламы через DNS — занимает пару минут.
+
+Инструкция: https://hertuno.github.io/vpn-status-live/dns.html
+
+В VPN укажите DNS:
+94.140.14.14
+94.140.15.15
+
+Потом переподключитесь. Телевизор, телефон и компьютер начнут получать «чистый» DNS, пока включён VPN.
+
+Если какой-то нужный сайт вдруг не откроется — напишите точный адрес.
+Запасной ключ из подписки работает как раньше.
+
+========== 2) Статус ==========
+Если узел не отвечает, Telegram может тоже не открыться. Смотрите статус без VPN:
+https://hertuno.github.io/vpn-status-live/
+
+Пуши на телефон (не через Telegram):
+https://ntfy.sh/vpn-hertuno-alert-7f3a9c2e
+Откройте ссылку → Subscribe / Подписаться.
+
+Запасной ключ из подписки — второй сервер.
+
+========== 3) Семья ==========
+Появился семейный тариф: один счёт на весь дом (до 8 устройств), два сервера, статус и оповещения при сбоях, фильтр рекламы.
+
+Цена: ваш текущий годовой × 1.7 (выгоднее двух отдельных подписок).
+
+Подробности: https://hertuno.github.io/vpn-status-live/family.html
+
+Если дома уже несколько человек — напишите, переведём и выдадим ключи под устройства.
+"""
+          payload = {
+            "name": "VPN operator",
+            "_subject": "[VPN] три текста — перешли клиентам",
+            "_template": "box",
+            "_captcha": "false",
+            "message": msg,
+          }
+          req = urllib.request.Request(
+            f"https://formsubmit.co/ajax/{to}",
+            data=json.dumps(payload).encode(),
+            headers={"Content-Type": "application/json", "Accept": "application/json"},
+            method="POST",
+          )
+          with urllib.request.urlopen(req, timeout=30) as r:
+            print(r.read().decode())
+          print("formsubmit ok ->", to)
           PY
+        env:
+          TO: ${{ secrets.FORMSUBMIT_EMAIL }}
