@@ -1,13 +1,13 @@
 {
-  "checked_at": "2026-10-06 01:46:20",
+  "checked_at": "2026-10-06 08:11:02",
   "monitors": [
     {
       "name": "vpn-a-443",
-      "up": true
+      "up": false
     },
     {
       "name": "vpn-a-2053",
-      "up": true
+      "up": false
     },
     {
       "name": "vpn-b-443",
