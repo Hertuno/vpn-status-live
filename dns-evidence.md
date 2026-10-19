@@ -1,6 +1,6 @@
 # DNS filter evidence
 
-Checked at: 2026-10-18T15:11Z against `94.140.14.14`
+Checked at: 2026-10-19T02:42Z against `94.140.14.14`
 
 | Host | Role | Answer |
 |---|---|---|
